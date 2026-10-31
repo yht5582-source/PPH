@@ -1,0 +1,26 @@
+// node tests.cjs — PPH engine tests (extracts /*ENGINE-START*/…/*ENGINE-END*/ from index.html)
+const fs=require('fs'),src=fs.readFileSync(__dirname+'/index.html','utf8');
+const PPH=new Function(src.split('/*ENGINE-START*/')[1].split('/*ENGINE-END*/')[0]+';return PPH')();
+let n=0,f=0;const t=(name,c)=>{n++;if(!c){f++;console.log('FAIL',name)}};
+const e=(blood,hr,sbp,dbp)=>PPH.evaluate({blood,hr,sbp,dbp});
+t('default case triggers',e(350,112,104,65).trigger);
+t('≥300 + HR>100',e(300,101,120,80).trigger);
+t('HR 100 is not >100',!e(300,100,120,80).trigger);
+t('SI exactly 1 not >1',!e(300,100,100,70).signs.find(s=>s[0]==='SI >1')[1]);
+t('SBP 100 not <100, DBP 60 not <60',!e(300,90,100,60).abnormal);
+t('SBP 99 abnormal',e(300,90,99,60).trigger);
+t('DBP 59 abnormal',e(300,90,110,59).trigger);
+t('299 + abnormal no trigger',!e(299,130,90,50).trigger&&e(299,130,90,50).abnormal);
+t('500 alone triggers',e(500,80,120,80).trigger&&e(500,80,120,80).reason==='失血量 ≥500 mL');
+t('reason for 300 rule',e(320,108,120,80).reason.includes('300'));
+t('RCOG minor',e(800,80,120,80).rcog.startsWith('minor'));
+t('RCOG 1000 still minor',e(1000,80,120,80).rcog.startsWith('minor'));
+t('RCOG major',e(1001,80,120,80).rcog.startsWith('major'));
+t('no RCOG <500',e(400,80,120,80).rcog===null);
+t('blank blood error',!e('',100,100,60).ok&&e('',100,100,60).errors[0].includes('失血量'));
+t('implausible HR',!e(250,9999,100,60).ok);
+t('implausible SBP',!e(250,90,3,1).ok);
+t('dbp>=sbp',!e(300,90,80,80).ok);
+t('negative blood',!e(-1,90,120,80).ok);
+t('blood 0 ok',e(0,80,120,80).ok);
+console.log(`${n-f}/${n} passed`);process.exit(f?1:0);
