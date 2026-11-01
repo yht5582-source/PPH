@@ -76,4 +76,26 @@ t('map TXA window matches engine',has(MAPS.tx,'出生後 3 小時內')&&g(D({min
 const secondLine=D({oxy:'inadequate'});
 t('map doses match engine',has(MAPS.tx,'10 IU IV')&&g(D({}),'oxy').dose.startsWith('10 IU IV')&&has(MAPS.tx,'1 g IV')&&g(D({}),'txa').dose.startsWith('1 g IV')&&has(MAPS.tx,'0.2 mg IM')&&g(secondLine,'ergo').dose.startsWith('0.2 mg IM')&&has(MAPS.tx,'250 μg IM')&&g(secondLine,'carbo').dose.startsWith('250 μg IM')&&has(MAPS.tx,'800 μg 舌下')&&g(secondLine,'miso').dose==='800 μg 舌下');
 t('map avoid rules match engine',has(MAPS.tx,'禁止併用 ergot')&&g(D({oxy:'inadequate',cyp:true}),'ergo').st==='contra'&&has(MAPS.tx,'氣喘：避免 carboprost')&&g(D({oxy:'inadequate',asthma:true}),'carbo').st==='avoid'&&has(MAPS.tx,'抗纖溶禁忌：避免 TXA')&&g(D({vte:true}),'txa').st==='avoid');
+
+// demo cases: structure, buttons, refs, and each case's key decision agreeing with the engine
+const cases=new Function(src.split('/*CASES-START*/')[1].split('/*CASES-END*/')[0]+';return cases')();
+const steps=cases.flat();
+t('8 cases',cases.length===8&&cases.every(c=>c.length>=2));
+t('case buttons exist',cases.every((_,i)=>src.includes(`id="case${i}"`)));
+t('case step shape',steps.every(s=>s.length===6&&s[3].length===3&&Number.isInteger(s[4])&&s[4]>=0&&s[4]<3));
+t('case feedback cites listed sources',steps.every(s=>{const m=s[5].match(/\[([\d,]+)\]/);return m&&m[1].split(',').every(n=>src.includes(`<b>[${n}] `))}));
+t('new cases correct answers vary',new Set(cases.slice(2).flat().map(s=>s[4])).size===3);
+const pick=(ci,si)=>cases[ci][si][3][cases[ci][si][4]];
+t('case C triggers threshold',e(450,108,110,70).trigger&&e(450,108,110,70).reason.includes('300'));
+t('case C avoids ergometrine',pick(2,1)==='Ergometrine'&&g(D({causes:{tone:true,tissue:true},oxy:'inadequate'}),'ergo').why.some(w=>w.includes('胎盤仍滯留')));
+const caseD=D({oxy:'inadequate',asthma:true,cyp:true});
+t('case D answer matches engine',pick(3,0).startsWith('Misoprostol')&&g(caseD,'miso').st==='rec'&&g(caseD,'ergo').st==='contra'&&g(caseD,'carbo').st==='avoid');
+t('case D TXA window',g(caseD,'txa').st==='rec'&&caseD.txaLeft===140&&cases[3][1][5].includes('140'));
+t('case E first dose at 170 min',g(D({min:170}),'txa').st==='rec'&&D({min:170}).txaLeft===10&&e(550,90,120,80).trigger);
+t('case E second dose past 3 h',g(D({min:210,txa:'1',txaOngoing:true}),'txa').st==='rec'&&pick(4,1).includes('1 g'));
+t('case E no third dose',g(D({min:240,txa:'2',txaOngoing:true}),'txa').st==='done');
+const caseF=e(280,98,95,70);
+t('case F below threshold but abnormal',!caseF.trigger&&caseF.abnormal&&caseF.si.toFixed(2)==='1.03');
+t('case F no late TXA',g(D({min:210,causes:{trauma:true}}),'txa').st==='na');
+t('case G triggers threshold',e(1800,128,88,52).trigger&&e(1800,128,88,52).rcog.startsWith('major'));
 console.log(`${n-f}/${n} passed`);process.exit(f?1:0);
