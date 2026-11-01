@@ -52,4 +52,20 @@ t('trauma only: oxy consider + note',g(D({causes:{trauma:true}}),'oxy').st==='co
 t('trauma only: no second-line push',g(D({causes:{trauma:true},oxy:'inadequate'}),'ergo').st==='later');
 t('no cause = treat as tone',g(D({causes:{}}),'oxy').st==='rec');
 t('bad minutes',!D({min:''}).ok&&!D({min:-5}).ok);
+
+// mind maps: structure, valid refs and jump targets, and figures agreeing with the engine
+const MAPS=new Function(src.split('/*MAP-START*/')[1].split('/*MAP-END*/')[0]+';return MAPS')();
+const leaves=m=>m.branches.flatMap(b=>b.k),all=[...leaves(MAPS.dx),...leaves(MAPS.tx)],has=(m,s)=>leaves(m).some(l=>l.t.includes(s));
+t('two maps',Object.keys(MAPS).join()==='dx,tx');
+t('map branches',Object.values(MAPS).every(m=>m.branches.length>=8&&m.branches.every(b=>b.k.length>=2&&/^#[0-9a-f]{6}$/.test(b.color))));
+t('map refs exist on sources tab',all.every(l=>!l.r||l.r.every(n=>src.includes(`<b>[${n}] `))));
+t('map jump targets exist',all.every(l=>!l.to||src.includes(`data-tab="${l.to}"`)||src.includes(`id="${l.to}"`)));
+t('map tab wired',src.includes('data-tab="map"')&&src.includes('<section id="map"'));
+t('map has all 4T',['Tone','Trauma','Tissue','Thrombin'].every(x=>MAPS.dx.branches.some(b=>b.t.startsWith(x))));
+t('map thresholds match engine',has(MAPS.dx,'≥500 mL')&&e(500,80,120,80).trigger&&has(MAPS.dx,'≥300 mL')&&e(300,101,120,80).trigger&&['HR >100','SI >1','SBP <100','DBP <60'].every(s=>has(MAPS.dx,s)&&e(300,90,120,80).signs.some(z=>z[0]===s)));
+t('map RCOG split matches engine',has(MAPS.dx,'500–1000 mL')&&has(MAPS.dx,'major >1000 mL')&&e(1000,80,120,80).rcog.includes('500–1000 mL'));
+t('map TXA window matches engine',has(MAPS.tx,'出生後 3 小時內')&&g(D({min:180}),'txa').st==='rec'&&g(D({min:181}),'txa').st==='na');
+const secondLine=D({oxy:'inadequate'});
+t('map doses match engine',has(MAPS.tx,'10 IU IV')&&g(D({}),'oxy').dose.startsWith('10 IU IV')&&has(MAPS.tx,'1 g IV')&&g(D({}),'txa').dose.startsWith('1 g IV')&&has(MAPS.tx,'0.2 mg IM')&&g(secondLine,'ergo').dose.startsWith('0.2 mg IM')&&has(MAPS.tx,'250 μg IM')&&g(secondLine,'carbo').dose.startsWith('250 μg IM')&&has(MAPS.tx,'800 μg 舌下')&&g(secondLine,'miso').dose==='800 μg 舌下');
+t('map avoid rules match engine',has(MAPS.tx,'禁止併用 ergot')&&g(D({oxy:'inadequate',cyp:true}),'ergo').st==='contra'&&has(MAPS.tx,'氣喘：避免 carboprost')&&g(D({oxy:'inadequate',asthma:true}),'carbo').st==='avoid'&&has(MAPS.tx,'抗纖溶禁忌：避免 TXA')&&g(D({vte:true}),'txa').st==='avoid');
 console.log(`${n-f}/${n} passed`);process.exit(f?1:0);
