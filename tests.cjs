@@ -114,4 +114,5 @@ t('label: renal keeps stronger status',g(D({oxy:'inadequate',renal:true,cyp:true
 t('label: misoprostol off-label noted',g(D({oxy:'inadequate'}),'miso').why.some(w=>w.includes('仿單外')));
 t('label: methylergonovine IV dose shown',g(D({oxy:'inadequate'}),'ergo').dose.includes('0.05–0.1 mg'));
 t('label: unsourced wording removed',!/低血鈉|冠狀動脈收縮|肺動脈壓|核對劑量調整/.test(src));
+t('VTE reassessment labelled as clinical routine, without a source ref',src.includes('重新評估血栓預防時機（臨床常規')&&leaves(MAPS.tx).some(l=>l.t.includes('血栓預防')&&l.t.includes('臨床常規')&&!l.r));
 console.log(`${n-f}/${n} passed`);process.exit(f?1:0);
