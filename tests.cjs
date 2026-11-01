@@ -52,6 +52,14 @@ t('trauma only: oxy consider + note',g(D({causes:{trauma:true}}),'oxy').st==='co
 t('trauma only: no second-line push',g(D({causes:{trauma:true},oxy:'inadequate'}),'ergo').st==='later');
 t('no cause = treat as tone',g(D({causes:{}}),'oxy').st==='rec');
 t('bad minutes',!D({min:''}).ok&&!D({min:-5}).ok);
+const tt={causes:{tone:true,tissue:true}};
+t('tissue: ergo rec downgraded to caution, warns',g(D({...tt,oxy:'inadequate'}),'ergo').st==='caution'&&g(D({...tt,oxy:'inadequate'}),'ergo').why.some(w=>w.includes('胎盤仍滯留')));
+t('tissue: ergo keeps its dose (not a prohibition)',g(D({...tt,oxy:'inadequate'}),'ergo').dose.startsWith('0.2 mg IM'));
+t('tissue: warning shown before oxy failure',g(D(tt),'ergo').st==='later'&&g(D(tt),'ergo').why.some(w=>w.includes('胎盤仍滯留')));
+t('tissue: contra stays contra with warning',g(D({...tt,oxy:'inadequate',cyp:true}),'ergo').st==='contra'&&g(D({...tt,oxy:'inadequate',cyp:true}),'ergo').why.some(w=>w.includes('胎盤仍滯留')));
+t('tissue: other uterotonics unaffected',g(D({...tt,oxy:'inadequate'}),'carbo').st==='rec'&&g(D({...tt,oxy:'inadequate'}),'miso').st==='rec');
+t('no tissue: ergo rec without warning',g(D({oxy:'inadequate'}),'ergo').st==='rec'&&!g(D({oxy:'inadequate'}),'ergo').why.some(w=>w.includes('胎盤仍滯留')));
+t('ergo schedule cited to [5], source listed',g(D({oxy:'inadequate'}),'ergo').dose.includes('[5]')&&src.includes('<b>[5] WHO')&&src.includes('<b>Ergometrine</b>15 分鐘後可重複')&&!/<b>Ergometrine<\/b>[^<]*\[2\]/.test(src));
 
 // mind maps: structure, valid refs and jump targets, and figures agreeing with the engine
 const MAPS=new Function(src.split('/*MAP-START*/')[1].split('/*MAP-END*/')[0]+';return MAPS')();
