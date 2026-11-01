@@ -106,4 +106,12 @@ t('audit: threshold caesarean caveat',src.includes('此門檻的證據以陰道�
 t('audit: balloon quiz option no longer caesarean',!src.includes('剖腹產後下段收縮不良'));
 t('audit: misoprostol adjunct note in plan',['',true].every(m=>g(D({oxy:'inadequate',misoProph:m}),'miso').why.some(w=>w.includes('沒有額外效益'))));
 t('audit: claims removed',!src.includes('與嚴重度相關')&&!src.includes('15 分鐘內全部到位')&&!src.includes('同步加用第二線'));
+t('label: sources 6 and 7 listed',src.includes('<b>[6] ')&&src.includes('<b>[7] '));
+t('label: TXA renal cites Taiwan label',g(D({renal:true}),'txa').why.some(w=>w.includes('慎重給藥')&&w.includes('[6]')));
+const R=D({oxy:'inadequate',renal:true});
+t('label: renal lowers ergot and carboprost to caution',g(R,'ergo').st==='caution'&&g(R,'carbo').st==='caution'&&g(R,'miso').st==='rec');
+t('label: renal keeps stronger status',g(D({oxy:'inadequate',renal:true,cyp:true,asthma:true}),'ergo').st==='contra'&&g(D({oxy:'inadequate',renal:true,cyp:true,asthma:true}),'carbo').st==='avoid');
+t('label: misoprostol off-label noted',g(D({oxy:'inadequate'}),'miso').why.some(w=>w.includes('仿單外')));
+t('label: methylergonovine IV dose shown',g(D({oxy:'inadequate'}),'ergo').dose.includes('0.05–0.1 mg'));
+t('label: unsourced wording removed',!/低血鈉|冠狀動脈收縮|肺動脈壓|核對劑量調整/.test(src));
 console.log(`${n-f}/${n} passed`);process.exit(f?1:0);
