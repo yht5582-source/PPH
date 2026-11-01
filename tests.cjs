@@ -98,4 +98,6 @@ const caseF=e(280,98,95,70);
 t('case F below threshold but abnormal',!caseF.trigger&&caseF.abnormal&&caseF.si.toFixed(2)==='1.03');
 t('case F no late TXA',g(D({min:210,causes:{trauma:true}}),'txa').st==='na');
 t('case G triggers threshold',e(1800,128,88,52).trigger&&e(1800,128,88,52).rcog.startsWith('major'));
+t('unsourced claims stay removed',!/迷走|QT 延長|螯合鈣|不成比例|不相稱/.test(src));
+t('secondary PPH shows both definitions',src.includes('24 小時至 12 週')&&src.includes('24 小時至 6 週'));
 console.log(`${n-f}/${n} passed`);process.exit(f?1:0);
